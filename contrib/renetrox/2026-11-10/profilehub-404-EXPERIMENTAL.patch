@@ -1,0 +1,14 @@
+# LOCAL WORKAROUND ONLY — NOT A SECURE UPSTREAM AUTHENTICATION FIX.
+# Skips a secondary password check on HTTP 404 from the retired profile_hub endpoint.
+# Review upstream issue #1806. A supported replacement verification flow is required.
+--- a/resources/lib/services/nfsession/session/access.py
++++ b/resources/lib/services/nfsession/session/access.py
+@@ -141,7 +141,10 @@
+             if exc.response.status_code == 500:
+                 # This endpoint raise HTTP error 500 when the password is wrong
+                 raise LoginError(common.get_local_string(12344)) from exc
+-            raise
++            if exc.response.status_code != 404:
++                raise
++            LOG.warn('profilehub 404: secondary password validation skipped (experimental)')
+         common.set_credentials({'email': email, 'password': password})
